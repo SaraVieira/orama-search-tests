@@ -1,47 +1,44 @@
+// @ts-expect-error
 import { useSearch as useOramaSearch } from '@oramacloud/client/react';
 import { createContext, useContext, useState } from 'react';
 import { consoles } from './consoles';
-
-type OramaProviderProps = {
-  children: React.ReactNode;
-};
+import { debounce } from 'lodash-es';
+import { Console, ConsoleSelected } from './types';
 
 type OramaProviderState = {
-  isLoading: boolean;
-  onSearchText: (value: string) => Promise<void>;
+  onSearchText: any;
   results: any;
   value: string;
-  consolesForm: any;
+  consolesSelected: ConsoleSelected;
   rating: number;
   setRating: (r: number) => void;
-  setConsolesForm: (r: any) => void;
+  setConsolesSelected: React.Dispatch<React.SetStateAction<ConsoleSelected>>;
 };
 
 export const ratings = [1, 1.5, 2, 3, 3.5, 4, 4.5];
 
-const OramaProviderContext = createContext<OramaProviderState>({
-  isLoading: true,
-  onSearchText: () => Promise.resolve(),
+const defaultState = {
+  onSearchText: (_v: string) => Promise.resolve(),
   results: null,
   value: '',
-  consolesForm: {} as any,
+  consolesSelected: consoles.reduce((acc: ConsoleSelected, curr: Console) => {
+    acc[curr.id] = true;
+
+    return acc;
+  }, {}),
   rating: 0,
   setRating: (_r: number) => {},
-  setConsolesForm: (_r: object) => {},
-});
+  setConsolesSelected: (_r: object) => {},
+};
 
-export function OramaProvider({ children, ...props }: OramaProviderProps) {
-  const [value, setValue] = useState('');
-  const [rating, setRating] = useState(0);
-  const [consolesForm, setConsolesForm] = useState(
-    consoles.reduce((acc: { [a: string]: boolean }, curr: { name: string; id: string }) => {
-      acc[curr.id] = true;
+const OramaProviderContext = createContext<OramaProviderState>(defaultState);
 
-      return acc;
-    }, {})
-  );
+export function OramaProvider({ children, ...props }: { children: React.ReactNode }) {
+  const [value, setValue] = useState(defaultState.value);
+  const [rating, setRating] = useState(defaultState.rating);
+  const [consolesSelected, setConsolesSelected] = useState(defaultState.consolesSelected);
 
-  const { results, ready } = useOramaSearch({
+  const { results } = useOramaSearch({
     term: value || '',
     limit: 50,
     mode: 'fulltext',
@@ -49,27 +46,26 @@ export function OramaProvider({ children, ...props }: OramaProviderProps) {
       total_rating: {
         gte: rating * 20,
       },
-      console: { in: Object.keys(consolesForm).filter((k) => consolesForm[k]) },
+      console: { in: Object.keys(consolesSelected).filter((k) => consolesSelected[k]) },
     },
   });
 
-  const onSearchText = async (value: string) => {
-    console.log(value);
-    setValue(value);
-  };
+  const onSearchText = debounce(setValue, 200);
+
+  onSearchText.cancel();
+  onSearchText.flush();
 
   return (
     <OramaProviderContext.Provider
       {...props}
       value={{
-        isLoading: !ready,
         onSearchText,
         results,
         value,
-        consolesForm,
+        consolesSelected,
         rating,
         setRating,
-        setConsolesForm,
+        setConsolesSelected,
       }}
     >
       {children}

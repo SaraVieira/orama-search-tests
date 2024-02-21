@@ -13,3 +13,6 @@ export interface Game {
   developer: string;
   publisher: string;
 }
+
+export type Console = { name: string; id: string };
+export type ConsoleSelected = { [console: string]: boolean };

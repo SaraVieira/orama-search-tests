@@ -1,13 +1,12 @@
 import { consoles } from '@/lib/consoles';
 import type { Game } from '@/lib/types';
-import { Card, CardContent, CardHeader } from '../ui/card';
-import { AspectRatio } from '../ui/aspect-ratio';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Badge } from '../ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
-import { Rating } from '../Rating';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { AspectRatio } from './ui/aspect-ratio';
+import { Badge } from './ui/badge';
+import { ScrollArea } from './ui/scroll-area';
+import { Rating } from './Rating';
 
-export function Game(props: Game) {
+export function GameCard(props: Game) {
   const {
     cover,
     name,
